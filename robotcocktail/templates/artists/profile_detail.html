@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% load static i18n %}
+
+{% block title %}
+{% if object.artist_name %}
+{{ object.artist_name }}
+{% else %}
+{{ object.user.username }}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+
+  <div class="row">
+    <div class="col-sm-12">
+
+      <h1>{% blocktranslate with name=object.artist_name %}
+        {{ name }}'s profile
+        {% endblocktranslate %}</h1>
+      {% if object.artist_name %}
+      <p>{% blocktranslate with username=object.user.username %}
+        Share your username '{{ username }}' to be added in a friend's list.
+        {% endblocktranslate %}</p>
+      {% else %}
+      <p>{% translate "You have not set any artist name, so your username is used instead" %}</p>
+      {% endif %}
+      <h2>Bio</h2>
+      <p>From : <em>{{ object.location }}</em> </p>
+      <p>{{ object.bio }}</p>
+    </div>
+  </div>
+
+  {% if object.user == request.user %}
+  <!-- Action buttons -->
+  <div class="row">
+
+    <div class="col-sm-12">
+      <!-- My Stuff -->
+      <a class="btn btn-primary" href="{% url 'artists:update' %}" role="button">{% translate "Edit profile" %}</a>
+      <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">{% translate "Configure my email" %}</a>
+    </div>
+
+  </div>
+  <!-- End Action buttons -->
+  {% endif %}
+
+</div>
+{% endblock content %}
