@@ -1,21 +1,30 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.http import Http404
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
 from django.views.generic import DetailView, UpdateView
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import Profile
+from .models import FollowRequest, Profile
+from .serializers import FollowRequestSerializer
 
 User = get_user_model()
 
 
-class ProfileDetailView(LoginRequiredMixin, DetailView):
+class ProfileDetailView(LoginRequiredMixin, SuccessMessageMixin, DetailView):
 
     model = Profile
+    success_message = _("Sucess message in profile")
 
     def get_object(self):
-        return self.request.user.profile
+        if "username" in self.kwargs:
+            return User.objects.get(username=self.kwargs["username"]).profile
+        else:
+            return self.request.user.profile
 
 
 profile_detail_view = ProfileDetailView.as_view()
@@ -42,3 +51,68 @@ class ProfileUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
 
 
 profile_update_view = ProfileUpdateView.as_view()
+
+
+class MyReceivedFollowRequestList(APIView):
+    def get(self, request, format=None):
+        follow_requests = FollowRequest.objects.filter(to_profile=request.user.profile)
+        serializer = FollowRequestSerializer(follow_requests, many=True)
+        return Response(serializer.data)
+
+
+class MySentFollowRequestList(APIView):
+    def get(self, request, format=None):
+        follow_requests = FollowRequest.objects.filter(
+            from_profile=request.user.profile
+        )
+        serializer = FollowRequestSerializer(follow_requests, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        """{"from_profile":1, "to_profile":1}"""
+        request.data["status"] = FollowRequest.CREATED
+        request.data["from_profile"] = request.user.profile.pk
+        serializer = FollowRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            if (
+                serializer.validated_data["to_profile"]
+                == serializer.validated_data["from_profile"]
+            ):
+                return Response(
+                    "Impossible to make a follow request to oneself",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class FollowRequestDetail(APIView):
+    def get_object(self, pk):
+        try:
+            return FollowRequest.objects.get(pk=pk)
+        except FollowRequest.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        follow_request = self.get_object(pk)
+        if request.user.profile in (
+            follow_request.from_profile,
+            follow_request.to_profile,
+        ):
+            serializer = FollowRequestSerializer(follow_request)
+            return Response(serializer.data)
+        raise Http404
+
+    def put(self, request, pk, format=None):
+        raise Http404
+
+    def delete(self, request, pk, format=None):
+        follow_request = self.get_object(pk)
+        if request.user.profile in (
+            follow_request.from_profile,
+            follow_request.to_profile,
+        ):
+            follow_request.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        raise Http404

@@ -14,10 +14,10 @@
 
   <div class="row">
     <div class="col-sm-12">
+      <h1>{% blocktranslate with name=object.artist_name %}{{ name }}'s profile{% endblocktranslate %}</h1>
 
-      <h1>{% blocktranslate with name=object.artist_name %}
-        {{ name }}'s profile
-        {% endblocktranslate %}</h1>
+      {% if object.user == request.user %}
+
       {% if object.artist_name %}
       <p>{% blocktranslate with username=object.user.username %}
         Share your username '{{ username }}' to be added in a friend's list.
@@ -25,25 +25,67 @@
       {% else %}
       <p>{% translate "You have not set any artist name, so your username is used instead" %}</p>
       {% endif %}
-      <h2>Bio</h2>
-      <p>From : <em>{{ object.location }}</em> </p>
+
+      {% endif %}
+
+      {% if object.location %}<p>{% translate "From" %} : <em>{{ object.location }}</em> </p>{% endif %}
+      <h2>{% translate "Bio" %}</h2>
       <p>{{ object.bio }}</p>
+
+      {% if object.user == request.user and object.follow_requests_received.any %}
+      <h2>{% translate "My friendships" %}</h2>
+      {% for friendship_request in object.follow_requests_received.all %}
+      friendship_request
+      {% endfor %}
+      {% endif %}
     </div>
   </div>
 
-  {% if object.user == request.user %}
+
   <!-- Action buttons -->
   <div class="row">
 
     <div class="col-sm-12">
-      <!-- My Stuff -->
+      {% if object.user == request.user %}
       <a class="btn btn-primary" href="{% url 'artists:update' %}" role="button">{% translate "Edit profile" %}</a>
       <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">{% translate "Configure my email" %}</a>
+      {% else %}
+      {% if request.user.is_authenticated %}
+      {% csrf_token %}
+      <a class="btn btn-primary" href="#" role="button" id="follow" onclick='follow("{{ object.pk }}")'>{% translate
+        "Follow" %}</a>
+      <a class="btn btn-danger" href="#" role="button" id="unfollow">{% translate "Unfollow" %}</a>
+
+      {% endif %}
+      {% endif %}
     </div>
 
   </div>
   <!-- End Action buttons -->
-  {% endif %}
 
 </div>
 {% endblock content %}
+
+{% block inline_javascript %}
+<script>
+  function unfollow() {
+  }
+  async function follow(profile_pk, csrftoken) {
+    console.log(await post('http://127.0.0.1:8000/artists/mysentfollowrequest/', { "to_profile": profile_pk }));
+  }
+  async function post(url, data) {
+    csrf_token = document.getElementsByName('csrfmiddlewaretoken')[0].value
+    let response = await fetch(url, {
+      method: "POST",
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrf_token
+      },
+      body: JSON.stringify(data),
+    });
+    return response.json(); // parses JSON response into native JavaScript objects
+  }
+
+</script>
+{% endblock inline_javascript %}

@@ -1,12 +1,30 @@
 from django.contrib import admin, messages
 from django.utils.translation import ngettext
 
-from robotcocktail.artists.models import Profile
+from robotcocktail.artists.models import FollowRequest, Profile
+
+
+@admin.register(FollowRequest)
+class FollowRequestAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "status",
+        "from_profile",
+        "to_profile",
+        "message",
+        "updated_at",
+        "created_at",
+    )
+
+
+class FollowInline(admin.TabularInline):
+    model = FollowRequest
+    fk_name = "from_profile"
 
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    # inlines = (SubscriptionsInline, )
+    inlines = (FollowInline,)
     list_display = (
         "user",
         "artist_name",

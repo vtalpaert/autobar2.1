@@ -85,7 +85,6 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     "robotcocktail.users",
     # Your stuff: custom apps go here
-    "friendship",
     "robotcocktail.artists",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps

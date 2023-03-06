@@ -18,7 +18,6 @@ urlpatterns = [
     # path("users/", include("robotcocktail.users.urls", namespace="users")),
     path("accounts/", include("allauth.urls")),
     # Your stuff: custom urls includes go here
-    # path('friendship/', include('friendship.urls')),
     path("artists/", include("robotcocktail.artists.urls", namespace="artists")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
