@@ -52,10 +52,8 @@
       {% else %}
       {% if request.user.is_authenticated %}
       {% csrf_token %}
-      <a class="btn btn-primary" href="#" role="button" id="follow" onclick='follow("{{ object.pk }}")'>{% translate
-        "Follow" %}</a>
-      <a class="btn btn-danger" href="#" role="button" id="unfollow">{% translate "Unfollow" %}</a>
-
+      <button class="btn btn-primary" href="#" role="button" name="follow" onclick="follow()">{% translate "Follow" %}</button>
+      <button class="btn btn-danger" href="#" role="button" name="unfollow" onclick="unfollow()" hidden>{% translate "Unfollow" %}</button>
       {% endif %}
       {% endif %}
     </div>
@@ -68,11 +66,31 @@
 
 {% block inline_javascript %}
 <script>
-  function unfollow() {
+  let followBtn = document.getElementsByName("follow")[0];
+  let unfollowBtn = document.getElementsByName("unfollow")[0]
+
+  async function follow() {
+    followBtn.disabled = true;
+    let response = await post('/artists/mysentfollowrequest/', { "to_profile": "{{ object.pk }}" });
+    if (response.ok) {
+      unfollowBtn.disabled = false;
+      followBtn.hidden = true;
+      unfollowBtn.hidden = false;
+      return 0;
+    }
   }
-  async function follow(profile_pk, csrftoken) {
-    console.log(await post('http://127.0.0.1:8000/artists/mysentfollowrequest/', { "to_profile": profile_pk }));
+
+  async function unfollow() {
+    unfollowBtn.disabled = true;
+    let response = await delete_request('/artists/mysentfollowrequest/', { "to_profile": "{{ object.pk }}" });
+    if (response.ok) {
+      followBtn.disabled = false;
+      unfollowBtn.hidden = true;
+      followBtn.hidden = false;
+      return 0;
+    }
   }
+
   async function post(url, data) {
     csrf_token = document.getElementsByName('csrfmiddlewaretoken')[0].value
     let response = await fetch(url, {
@@ -84,7 +102,34 @@
       },
       body: JSON.stringify(data),
     });
-    return response.json(); // parses JSON response into native JavaScript objects
+    return response; // parses JSON response into native JavaScript objects
+  }
+
+  async function delete_request(url, data) {
+    csrf_token = document.getElementsByName('csrfmiddlewaretoken')[0].value
+    let response = await fetch(url, {
+      method: "DELETE",
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrf_token
+      },
+      body: JSON.stringify(data),
+    });
+    return response; // parses JSON response into native JavaScript objects
+  }
+
+  async function get(url) {
+    csrf_token = document.getElementsByName('csrfmiddlewaretoken')[0].value
+    let response = await fetch(url, {
+      method: "GET",
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrf_token
+      },
+    });
+    return response; // parses JSON response into native JavaScript objects
   }
 
 </script>

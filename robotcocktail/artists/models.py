@@ -35,6 +35,12 @@ class Profile(models.Model):
     def my_following(self):
         return self.follow_requests_sent.filter(status=FollowRequest.ACCEPTED)
 
+    def my_request_to(self, profile):
+        try:
+            return self.follow_requests_sent.get(to_profile=profile)
+        except FollowRequest.DoesNotExist:
+            return
+
     def set_default_values(self):
         self.artist_name = self.user.username
         self.location = ""
@@ -56,6 +62,10 @@ post_save.connect(create_profile, sender=User)
 
 class FollowRequest(models.Model):
     "Request for a single direction access to the mixes portfolio of an artist"
+
+    class Meta:
+        unique_together = [["from_profile", "to_profile"]]
+
     CREATED = 0
     ACCEPTED = 1
     REJECTED = 2

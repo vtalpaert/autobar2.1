@@ -86,6 +86,21 @@ class MySentFollowRequestList(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def delete(self, request, format=None):
+        try:
+            follow_request = FollowRequest.objects.get(
+                from_profile=request.user.profile, to_profile=request.data["to_profile"]
+            )
+            follow_request.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except FollowRequest.DoesNotExist:
+            raise Http404
+        except KeyError:
+            return Response(
+                "You must provide a to_profile field",
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
 
 class FollowRequestDetail(APIView):
     def get_object(self, pk):
