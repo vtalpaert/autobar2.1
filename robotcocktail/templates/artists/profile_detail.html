@@ -13,32 +13,19 @@
 <div class="container">
   <div class="row">
     <div class="col-sm-12">
+      <p></p>
       {% if object.artist_name %}
       <h1>{% blocktranslate with name=object.artist_name %}{{ name }}'s profile{% endblocktranslate %}</h1>
       {% else %}
       <h1>{% blocktranslate with name=object %}{{ name }}'s profile{% endblocktranslate %}</h1>
       {% endif %}
 
-      {% if object.user == request.user %}
-
-      {% if object.artist_name %}
-      <p>{% blocktranslate with username=object.user.username %}
-        Share your username '{{ username }}' to be added in a friend's list.
-        {% endblocktranslate %}</p>
-      {% else %}
-      <p>{% translate "You have not set any artist name, so your username is used instead" %}</p>
-      {% endif %}
-
-      {% else %}
-
-      {% if request.user.is_authenticated %}
+      {% if object.user != request.user %}
       {% csrf_token %}
       <button class="btn btn-primary" href="#" role="button" name="follow" onclick="follow()">
         {% translate "Send a follow request" %}</button>
       <button class="btn btn-danger" href="#" role="button" name="unfollow" onclick="unfollow()" hidden>
         {% translate "Unfollow" %}</button>
-      {% endif %}
-
       {% endif %}
 
       {% if object.location %}<p>{% translate "From" %} : <em>{{ object.location }}</em> </p>{% endif %}
@@ -59,7 +46,27 @@
       <p></p>
       <h2>{% translate "Friendships" %}</h2>
 
+      {% if object.artist_name %}
+      <p>{% blocktranslate with username=object.user.username %}
+        Share your username '{{ username }}' to be added in a friend's list.
+        {% endblocktranslate %}</p>
+      {% else %}
+      <p>{% translate "You have not set any artist name, so your username is used instead" %}</p>
+      {% endif %}
 
+      <p>{% blocktranslate %}
+        Looking for someone ? Type this artist's username to find its biography
+        {% endblocktranslate %}</p>
+
+      <form class="d-flex" role="search">
+        <input class="form-control" type="email" placeholder="{% translate 'Find a user' %}" aria-label="followrequest">
+        <button class="btn btn-primary" type="submit">{% translate "Search" %}</button>
+      </form>
+      <div class="form-text">{% blocktranslate %}
+        You may send a follow request from the artist's profile
+        {% endblocktranslate %}</div>
+
+      <p></p>
       <h3>{% translate "Following" %}</h3>
       {% if object.follow_requests_sent.exists %}
       <div class="container">
@@ -74,7 +81,8 @@
                 {{friendship_request.to_profile.artist_name }}{% endif %}
               </div>
               <div class="col">
-                <button class="btn btn-danger" href="#" role="button" name="unfollow" onclick="console.log('Not implemented yet')">
+                <button class="btn btn-danger" href="#" role="button" name="unfollow"
+                  onclick="console.log('Not implemented yet')">
                   {% translate "Unfollow" %}</button>
               </div>
             </div>
@@ -86,14 +94,7 @@
       <p>{% translate "You have not sent any follow request yet." %}</p>
       {% endif %}
 
-      <form class="d-flex" role="search">
-        <input class="form-control" type="email" placeholder="{% translate 'Email address' %}"
-          aria-label="followrequest">
-        <button class="btn btn-primary" type="submit">{% translate "Send" %}</button>
-      </form>
-      <div class="form-text">We'll never share your email with anyone else.</div>
-
-
+      <p></p>
       <h3>{% translate "Followers" %}</h3>
       <p>{% blocktranslate %}
         You may switch on and off which user can access your recipes. Protect your personnal data, but mostly your
