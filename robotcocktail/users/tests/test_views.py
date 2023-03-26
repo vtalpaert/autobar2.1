@@ -11,11 +11,7 @@ from django.urls import reverse
 from robotcocktail.users.forms import UserAdminChangeForm
 from robotcocktail.users.models import User
 from robotcocktail.users.tests.factories import UserFactory
-from robotcocktail.users.views import (
-    UserRedirectView,
-    UserUpdateView,
-    user_detail_view,
-)
+from robotcocktail.users.views import UserRedirectView, UserUpdateView, user_detail_view
 
 pytestmark = pytest.mark.django_db
 
