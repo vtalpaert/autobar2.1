@@ -11,10 +11,13 @@
 
 {% block content %}
 <div class="container">
-
   <div class="row">
     <div class="col-sm-12">
+      {% if object.artist_name %}
       <h1>{% blocktranslate with name=object.artist_name %}{{ name }}'s profile{% endblocktranslate %}</h1>
+      {% else %}
+      <h1>{% blocktranslate with name=object %}{{ name }}'s profile{% endblocktranslate %}</h1>
+      {% endif %}
 
       {% if object.user == request.user %}
 
@@ -26,45 +29,143 @@
       <p>{% translate "You have not set any artist name, so your username is used instead" %}</p>
       {% endif %}
 
+      {% else %}
+
+      {% if request.user.is_authenticated %}
+      {% csrf_token %}
+      <button class="btn btn-primary" href="#" role="button" name="follow" onclick="follow()">
+        {% translate "Send a follow request" %}</button>
+      <button class="btn btn-danger" href="#" role="button" name="unfollow" onclick="unfollow()" hidden>
+        {% translate "Unfollow" %}</button>
+      {% endif %}
+
       {% endif %}
 
       {% if object.location %}<p>{% translate "From" %} : <em>{{ object.location }}</em> </p>{% endif %}
       <h2>{% translate "Bio" %}</h2>
       <p>{{ object.bio }}</p>
 
-      {% if object.user == request.user and object.follow_requests_received.any %}
-      <h2>{% translate "My friendships" %}</h2>
-      {% for friendship_request in object.follow_requests_received.all %}
-      friendship_request
-      {% endfor %}
-      {% endif %}
-    </div>
-  </div>
+      <div class="row">
+        <div class="col-sm-12">
+          {% if object.user == request.user %}
+          <a class="btn btn-primary" href="{% url 'artists:update' %}" role="button">{% translate "Edit profile" %}</a>
+          <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">
+            {% translate "Configure my email" %}</a>
+          {% endif %}
+        </div>
+      </div>
 
-
-  <!-- Action buttons -->
-  <div class="row">
-
-    <div class="col-sm-12">
       {% if object.user == request.user %}
-      <a class="btn btn-primary" href="{% url 'artists:update' %}" role="button">{% translate "Edit profile" %}</a>
-      <a class="btn btn-primary" href="{% url 'account_email' %}" role="button">{% translate "Configure my email" %}</a>
+      <p></p>
+      <h2>{% translate "Friendships" %}</h2>
+
+
+      <h3>{% translate "Following" %}</h3>
+      {% if object.follow_requests_sent.exists %}
+      <div class="container">
+        <ul>
+          {% for friendship_request in object.follow_requests_sent.all %}
+          <li>
+            <div class="row">
+              <div class="col">
+                {% translate "User" %}
+                <a href="/artists/profile/{{ friendship_request.to_profile }}/">{{ friendship_request.to_profile }}</a>
+                {% if friendship_request.to_profile.artist_name %}, a.k.a.
+                {{friendship_request.to_profile.artist_name }}{% endif %}
+              </div>
+              <div class="col">
+                <button class="btn btn-danger" href="#" role="button" name="unfollow" onclick="console.log('Not implemented yet')">
+                  {% translate "Unfollow" %}</button>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
       {% else %}
-      {% if request.user.is_authenticated %}
-      {% csrf_token %}
-      <button class="btn btn-primary" href="#" role="button" name="follow" onclick="follow()">{% translate "Follow" %}</button>
-      <button class="btn btn-danger" href="#" role="button" name="unfollow" onclick="unfollow()" hidden>{% translate "Unfollow" %}</button>
+      <p>{% translate "You have not sent any follow request yet." %}</p>
       {% endif %}
+
+      <form class="d-flex" role="search">
+        <input class="form-control" type="email" placeholder="{% translate 'Email address' %}"
+          aria-label="followrequest">
+        <button class="btn btn-primary" type="submit">{% translate "Send" %}</button>
+      </form>
+      <div class="form-text">We'll never share your email with anyone else.</div>
+
+
+      <h3>{% translate "Followers" %}</h3>
+      <p>{% blocktranslate %}
+        You may switch on and off which user can access your recipes. Protect your personnal data, but mostly your
+        secret ingredients!
+        {% endblocktranslate %}</p>
+
+      {% if object.follow_requests_received.exists %}
+      {% csrf_token %}
+      <div class="container">
+        {% for friendship_request in object.follow_requests_received.all %}
+        <div class="row">
+          <div class="col">
+            <div class="form-check form-switch">
+              <input {% if friendship_request.status == friendship_request.ACCEPTED %}checked{% endif %}
+                class="form-check-input" type="checkbox" name="follower-switch-{{ friendship_request.pk }}"
+                onclick="follower_switch('{{ friendship_request.pk }}', '{{ friendship_request.ACCEPTED }}', '{{ friendship_request.REJECTED }}')">
+              <label class="form-check-label">{% translate "User" %}
+                <a href="/artists/profile/{{ friendship_request.from_profile }}/">
+                  {{ friendship_request.from_profile }}</a>
+                {% if friendship_request.from_profile.artist_name %}, a.k.a.
+                {{friendship_request.from_profile.artist_name }}{% endif %}</label>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p>{% blocktranslate with username=object.user.username %}
+        You have not received any follow requests yet. Share your username '{{ username }}' to be added in a friend's
+        list.
+        {% endblocktranslate %}</p>
+      {% endif %}
+
       {% endif %}
     </div>
-
   </div>
-  <!-- End Action buttons -->
-
 </div>
 {% endblock content %}
 
 {% block inline_javascript %}
+{% if object.user == request.user %}
+<script>
+
+  async function follower_switch(friendship_request_pk, accept, reject) {
+    let followerBtn = document.getElementsByName("follower-switch-" + friendship_request_pk)[0];
+    let response = null;
+    if (followerBtn.checked) {
+      response = await put("/artists/followrequest/" + friendship_request_pk + "/", { "status": accept });
+    } else {
+      response = await put("/artists/followrequest/" + friendship_request_pk + "/", { "status": reject });
+    }
+    if (!response.ok) {
+      console.log("Error", response);
+    }
+  }
+
+  async function put(url, data) {
+    csrf_token = document.getElementsByName('csrfmiddlewaretoken')[0].value
+    let response = await fetch(url, {
+      method: "PUT",
+      credentials: 'include',
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrf_token
+      },
+      body: JSON.stringify(data),
+    });
+    return response;
+  }
+
+</script>
+{% else %}
 <script>
   let followBtn = document.getElementsByName("follow")[0];
   let unfollowBtn = document.getElementsByName("unfollow")[0]
@@ -102,7 +203,7 @@
       },
       body: JSON.stringify(data),
     });
-    return response; // parses JSON response into native JavaScript objects
+    return response;
   }
 
   async function delete_request(url, data) {
@@ -116,7 +217,7 @@
       },
       body: JSON.stringify(data),
     });
-    return response; // parses JSON response into native JavaScript objects
+    return response;
   }
 
   async function get(url) {
@@ -129,8 +230,8 @@
         "X-CSRFToken": csrf_token
       },
     });
-    return response; // parses JSON response into native JavaScript objects
+    return response;
   }
-
 </script>
+{% endif %}
 {% endblock inline_javascript %}

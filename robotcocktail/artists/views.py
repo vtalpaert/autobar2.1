@@ -120,14 +120,38 @@ class FollowRequestDetail(APIView):
         raise Http404
 
     def put(self, request, pk, format=None):
-        raise Http404
+        follow_request = self.get_object(pk)
+        if request.user.profile == follow_request.to_profile:
+            try:
+                if request.data["status"] == str(FollowRequest.ACCEPTED):
+                    follow_request.accept()
+                elif request.data["status"] == str(FollowRequest.REJECTED):
+                    follow_request.reject()
+                else:
+                    Response(
+                        "You are not allowed to set the follow request status to {}".format(
+                            request.data["status"]
+                        ),
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+                serializer = FollowRequestSerializer(follow_request)
+                return Response(serializer.data)
+            except KeyError:
+                return Response(
+                    "You must provide a status field",
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        return Response(
+            "You are not allowed to modify the follow request if you are not its target",
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     def delete(self, request, pk, format=None):
         follow_request = self.get_object(pk)
-        if request.user.profile in (
-            follow_request.from_profile,
-            follow_request.to_profile,
-        ):
+        if request.user.profile == follow_request.from_profile:
             follow_request.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
-        raise Http404
+        return Response(
+            "You are not allowed to delete a follow request if you are not the creator",
+            status=status.HTTP_400_BAD_REQUEST,
+        )
