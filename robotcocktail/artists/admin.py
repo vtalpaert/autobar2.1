@@ -1,7 +1,7 @@
 from django.contrib import admin, messages
 from django.utils.translation import ngettext
 
-from robotcocktail.artists.models import FollowRequest, Profile
+from robotcocktail.artists.models import FollowRequest, Ingredient, Profile
 
 
 @admin.register(FollowRequest)
@@ -52,3 +52,19 @@ class ProfileAdmin(admin.ModelAdmin):
             % resets,
             messages.SUCCESS,
         )
+
+
+@admin.register(Ingredient)
+class IngredientAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "state",
+        "is_alcohol",
+        "alcohol_percentage",
+        "density",
+    )
+    list_filter = (
+        "state",
+        "is_alcohol",
+    )
+    search_fields = ("name",)

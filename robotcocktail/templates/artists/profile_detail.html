@@ -13,12 +13,19 @@
 <div class="container">
   <div class="row">
     <div class="col-sm-12">
-      <p></p>
-      {% if object.artist_name %}
-      <h1>{% blocktranslate with name=object.artist_name %}{{ name }}'s profile{% endblocktranslate %}</h1>
-      {% else %}
-      <h1>{% blocktranslate with name=object %}{{ name }}'s profile{% endblocktranslate %}</h1>
-      {% endif %}
+      <div class="py-5 text-center">
+        <p class="lead text-body-primary">🪹</p>
+        {% if object.artist_name %}
+        <h1>{% blocktranslate with artist_name=object.artist_name %}
+          Welcome to {{ artist_name }}'s bar
+          {% endblocktranslate %}</h1>
+        {% else %}
+        <h1>{% blocktranslate with name=object %}Welcome to {{ name }}'s bar{% endblocktranslate %}</h1>
+        {% if object.user == request.user %}
+        <p class="lead">{% translate "You have not set any artist name, so your username is used instead" %}</p>
+        {% endif %}
+        {% endif %}
+      </div>
 
       {% if object.user != request.user %}
       {% csrf_token %}
@@ -28,7 +35,7 @@
         {% translate "Unfollow" %}</button>
       {% endif %}
 
-      {% if object.location %}<p>{% translate "From" %} : <em>{{ object.location }}</em> </p>{% endif %}
+      {% if object.location %}<p>{% translate "Location" %} : <em>{{ object.location }}</em> </p>{% endif %}
       <h2>{% translate "Bio" %}</h2>
       <p>{{ object.bio }}</p>
 
@@ -44,15 +51,11 @@
 
       {% if object.user == request.user %}
       <p></p>
-      <h2>{% translate "Friendships" %}</h2>
+      <h2>{% translate "My network" %}</h2>
 
-      {% if object.artist_name %}
       <p>{% blocktranslate with username=object.user.username %}
-        Share your username '{{ username }}' to be added in a friend's list.
+        Share your username '{{ username }}' to help other artists from finding your bar.
         {% endblocktranslate %}</p>
-      {% else %}
-      <p>{% translate "You have not set any artist name, so your username is used instead" %}</p>
-      {% endif %}
 
       <p>{% blocktranslate %}
         Looking for someone ? Type this artist's username to find its biography
@@ -63,7 +66,7 @@
         <button class="btn btn-primary" type="submit">{% translate "Search" %}</button>
       </form>
       <div class="form-text">{% blocktranslate %}
-        You may send a follow request from the artist's profile
+        You may send a follow request from the artist's page
         {% endblocktranslate %}</div>
 
       <p></p>
@@ -82,7 +85,7 @@
               </div>
               <div class="col">
                 <button class="btn btn-danger" href="#" role="button" name="unfollow"
-                  onclick="console.log('Not implemented yet')">
+                  onclick="alert('Not implemented yet')">
                   {% translate "Unfollow" %}</button>
               </div>
             </div>
@@ -98,7 +101,7 @@
       <h3>{% translate "Followers" %}</h3>
       <p>{% blocktranslate %}
         You may switch on and off which user can access your recipes. Protect your personnal data, but mostly your
-        secret ingredients!
+        secret recipes!
         {% endblocktranslate %}</p>
 
       {% if object.follow_requests_received.exists %}

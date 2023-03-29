@@ -1,7 +1,7 @@
 {% load static i18n %}
 <!DOCTYPE html>
 {% get_current_language as LANGUAGE_CODE %}
-<html lang="{{ LANGUAGE_CODE }}" data-bs-theme="light">
+<html lang="{{ LANGUAGE_CODE }}" data-bs-theme="dark">
 
 <head>
   <meta charset="utf-8">
@@ -56,7 +56,7 @@
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           {% if request.user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'artists:detail' %}">{% translate "My Profile" %}</a>
+            <a class="nav-link" href="{% url 'artists:detail' %}">{% translate "My Bar" %}</a>
           </li>
           {% endif %}
 
@@ -65,12 +65,12 @@
               {% translate "More" %}
             </a>
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">Action</a></li>
-              <li><a class="dropdown-item" href="#">Another action</a></li>
+              <li><a class="dropdown-item" href="/artists/ingredients/">{% translate "Ingredients" %}</a></li>
+              <li><a class="dropdown-item" href="#">{% translate "Recipes" %}</a></li>
               <li>
                 <hr class="dropdown-divider">
               </li>
-              <li><a class="dropdown-item" href="#">Something else here</a></li>
+              <li><a class="dropdown-item" href="#">{% translate "Craft a cocktail" %}</a></li>
             </ul>
           </li>
           <form class="d-flex justify-content-center" role="search">
@@ -123,6 +123,16 @@
     {% endblock content %}
 
   </div> <!-- /container -->
+
+  <div class="container">
+    <footer class="py-3 my-4">
+      <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+        <li class="nav-item"><a href="/home/" class="nav-link px-2 text-body-secondary">Home</a></li>
+        <li class="nav-item"><a href="/about/" class="nav-link px-2 text-body-secondary">About</a></li>
+      </ul>
+      <p class="text-center text-body-secondary">© 2023 Robot Cocktail, by Victor Talpaert</p>
+    </footer>
+  </div>
 
   {% block modal %}{% endblock modal %}
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"

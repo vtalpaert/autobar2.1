@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load static i18n %}
+{% load ingredient_extras %}
+
+{% block title %}
+{% translate "Ingredients" %}
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12">
+            <div class="py-5 text-center">
+                <h1>{% translate "Ingredients" %}</h1>
+                <p class="lead">{% translate "This list is maintained by the admins." %}</p>
+            </div>
+        </div>
+    </div>
+
+    <p><a href="/artists/ingredients/">See all ingredients</a></p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Name</th>
+                <th scope="col">State</th>
+                <th scope="col">Alcohol</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ingredient in ingredients %}
+            <tr>
+                <th scope="row">{{ ingredient.pk }}</th>
+                <td>{{ ingredient.name }}</td>
+                <td>
+                    <a href="/artists/ingredients/{{ ingredient.state|ingredient_state|lower }}/">{{ ingredient.state|ingredient_state }}</a>
+                </td>
+                <td>{% if ingredient.is_alcohol %}
+                    {{ ingredient.alcohol_percentage }}%
+                    {% else %}
+                    🙅
+                    {% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</div>
+
+{% endblock %}

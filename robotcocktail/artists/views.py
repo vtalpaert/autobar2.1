@@ -4,12 +4,12 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.http import Http404
 from django.urls import reverse
 from django.utils.translation import gettext_lazy as _
-from django.views.generic import DetailView, UpdateView
+from django.views.generic import DetailView, ListView, UpdateView
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import FollowRequest, Profile
+from .models import FollowRequest, Ingredient, Profile
 from .serializers import FollowRequestSerializer
 
 User = get_user_model()
@@ -155,3 +155,24 @@ class FollowRequestDetail(APIView):
             "You are not allowed to delete a follow request if you are not the creator",
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+_ingredient_state_reverse_lookup = {
+    name.lower(): key for key, name in Ingredient.STATE_CHOICES
+}
+
+
+class IngredientsView(ListView):
+    template_name = "artists/ingredients.html"
+    context_object_name = "ingredients"
+
+    def get_queryset(self):
+        ingredients = Ingredient.objects.all()
+        if (
+            "state" in self.kwargs
+            and self.kwargs["state"].lower() in _ingredient_state_reverse_lookup
+        ):
+            ingredients = ingredients.filter(
+                state=_ingredient_state_reverse_lookup[self.kwargs["state"].lower()]
+            )
+        return ingredients
