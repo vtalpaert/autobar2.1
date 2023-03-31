@@ -162,7 +162,7 @@ _ingredient_state_reverse_lookup = {
 }
 
 
-class IngredientsView(ListView):
+class IngredientsView(LoginRequiredMixin, SuccessMessageMixin, ListView):
     template_name = "artists/ingredients.html"
     context_object_name = "ingredients"
 
