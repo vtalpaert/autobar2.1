@@ -67,6 +67,9 @@
             <ul class="dropdown-menu">
               <li><a class="dropdown-item" href="/artists/ingredients/">{% translate "Ingredients" %}</a></li>
               <li><a class="dropdown-item" href="#">{% translate "Recipes" %}</a></li>
+              {% if request.user.is_staff %}
+              <li><a class="dropdown-item" href="/admin/">{% translate "Admin" %}</a></li>
+              {% endif %}
               <li>
                 <hr class="dropdown-divider">
               </li>
