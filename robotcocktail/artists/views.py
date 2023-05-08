@@ -21,10 +21,13 @@ class ProfileDetailView(LoginRequiredMixin, SuccessMessageMixin, DetailView):
     success_message = _("Sucess message in profile")
 
     def get_object(self):
-        if "username" in self.kwargs:
-            return User.objects.get(username=self.kwargs["username"]).profile
-        else:
-            return self.request.user.profile
+        try:
+            if "username" in self.kwargs:
+                return User.objects.get(username=self.kwargs["username"]).profile
+            else:
+                return self.request.user.profile
+        except User.DoesNotExist or AttributeError:
+            return None
 
 
 profile_detail_view = ProfileDetailView.as_view()
@@ -41,7 +44,10 @@ class ProfileUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_message = _("Information successfully updated")
 
     def get_object(self):
-        return self.request.user.profile
+        try:
+            return self.request.user.profile
+        except AttributeError:
+            return None
 
     def get_success_url(self):
         assert (
